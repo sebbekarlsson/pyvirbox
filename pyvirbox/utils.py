@@ -1,5 +1,7 @@
 import subprocess
 import time
+import os
+from pyvirbox.config import cfg
 
 
 def list_os_types():
@@ -66,13 +68,21 @@ def remove_vm(name):
     return output
 
 
-def create_vm(name, os, iso, ram, size, net_device='enp3s0'):
+def create_vm(name, vm_os, iso, ram, size, net_device='enp3s0'):
+    disk_path = cfg['basic']['disk_path']
+
+    if not os.path.exists(disk_path):
+        os.makedirs(disk_path)
+
+    disk_path = os.path.join(disk_path, name)
+    print(disk_path)
+
     output = subprocess.Popen(
             '''
-            VBoxManage createvm --name {name} --ostype "{os}" --register
-            VBoxManage createhd --filename {name}.vdi --size {size}
+            VBoxManage createvm --name {name} --ostype "{vm_os}" --register
+            VBoxManage createhd --filename {disk_path}.vdi --size {size}
             VBoxManage storagectl {name} --name "SATA Controller" --add sata --controller IntelAHCI
-            VBoxManage storageattach {name} --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium {name}.vdi
+            VBoxManage storageattach {name} --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium {disk_path}.vdi
             VBoxManage storagectl {name} --name "IDE Controller" --add ide
             VBoxManage storageattach {name} --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium {iso}
             VBoxManage modifyvm {name} --ioapic on
@@ -83,11 +93,12 @@ def create_vm(name, os, iso, ram, size, net_device='enp3s0'):
             '''.\
                     format(
                         name=name,
-                        os=os,
+                        vm_os=vm_os,
                         iso=iso,
                         ram=ram,
                         size=size,
-                        net_device=net_device
+                        net_device=net_device,
+                        disk_path=disk_path
                         ),
             shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8')
 
