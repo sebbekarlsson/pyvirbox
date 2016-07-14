@@ -8,6 +8,6 @@ vmname = 'TESTBOX'
 #print(start_vm(vmname))
 #print(vm_info(vmname))
 #print(execute_vm(vmname, '/sbin/ifconfig', 'root', 'debian'))
-print(stop_vm(vmname))
+#print(stop_vm(vmname))
 #print(remove_vm(vmname))
-#print(list_vms())
+print(list_vms())
